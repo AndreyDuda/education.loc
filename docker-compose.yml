@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   nginx:
     build:
@@ -7,35 +7,37 @@ services:
     volumes:
       - ./:/var/www
     ports:
-      - "8080:8000"
-    links:
+      - "8080:80"
+    depends_on:
       - php-fpm
+
   php-fpm:
     build:
       context: ./
       dockerfile: docker/php-fpm.docker
     volumes:
       - ./:/var/www
-    links:
+    depends_on:
       - mysql
       - redis
-    environment:
-      - "DB_PORT=3306"
-      - "DB_HOST=mysql"
-      - "REDIS_PORT=6379"
-      - "REDIS_HOST=redis"
+    env_file:
+      - .env
+
   mysql:
     image: mysql:5.7
     volumes:
       - ./storage/docker/mysql:/var/lib/mysql
-    environment:
-      - "MYSQL_ROOT_PASSWORD=1234"
-      - "MYSQL_USER=ROOT"
-      - "MYSQL_PASSWORD=1234"
-      - "MYSQL_DATABASE=app"
     ports:
-      - "33061:3306"
+      - "33061:$DB_PORT"
+    env_file:
+      - .env
+    environment:
+      - "MYSQL_ROOT_PASSWORD=$DB_PASSWORD"
+      - "MYSQL_USER=$DB_USERNAME"
+      - "MYSQL_PASSWORD=$DB_PASSWORD"
+      - "MYSQL_DATABASE=$DB_DATABASE"
+
   redis:
     image: redis:3.0
     ports:
-      - "63791:6379"
+      - "63791:$REDIS_PORT"
